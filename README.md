@@ -19,8 +19,8 @@ If you are updating the server to a new version you will need to delete the git 
 ``` cd && rm -rf terraria-server-script-termux && git clone https://github.com/kane9287/terraria-server-script-termux.git && chmod +x terraria-server-script-termux/tserver && ./terraria-server-script-termux/tserver ```
 
 ### Credits
-The OG tserver script author: https://github.com/gediminas748/terraria-server-script-for-termux  
-Author of an MC server script for Termux. This script was instrumental in putting server files in an editable folder on Android sans root: https://github.com/ramide1/mc-server-termux  
+**The OG tserver script author:** https://github.com/gediminas748/terraria-server-script-for-termux  
+**Author of an MC server script for Termux. This script was instrumental in putting server files in an editable folder on Android sans root:** https://github.com/ramide1/mc-server-termux  
 
 #### AI Disclaimer
 Claude.ai - Helped mash the files together with a prompt and some cleanup.
