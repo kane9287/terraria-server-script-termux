@@ -1,55 +1,70 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Terraria server directory
-DIR="$HOME/1455/Linux"
+# =====================
+# VERSION CONFIG
+# =====================
+TERRARIA_VERSION="1455"
+# =====================
+
+# Setup shared storage if needed
+if [ ! -d "$HOME/storage" ]; then
+    echo "Requesting storage permissions..."
+    termux-setup-storage
+    if [ $? -ne 0 ]; then
+        echo "Failed to set up storage. Exiting."
+        exit 1
+    fi
+    echo "Storage permissions granted."
+fi
+
+read -p "Enter the directory name for your Terraria server: " directory_name
+SERVER_DIR="$HOME/storage/shared/$directory_name"
+INSTALL_DIR="$SERVER_DIR/$TERRARIA_VERSION/Linux"
 
 # Check if already installed
-if [ -d "$DIR" ]; then
+if [ -d "$INSTALL_DIR" ]; then
     clear
-    echo "Terraria server already installed. Launching..."
-    mono --server --gc=sgen -O=all "$DIR/TerrariaServer.exe"
+    echo "Terraria $TERRARIA_VERSION already installed. Launching..."
+    mono --server --gc=sgen -O=all "$INSTALL_DIR/TerrariaServer.exe"
 else
     clear
-    echo "Terraria server not found. Installing..."
+    echo "Terraria $TERRARIA_VERSION not found. Installing..."
 
-    # Update & install required packages
     pkg update -y && pkg upgrade -y
     pkg install -y mono wget unzip
 
-    # Download Terraria server zip
-    wget https://terraria.org/api/download/pc-dedicated-server/terraria-server-1455.zip -O terraria-server.zip
+    mkdir -p "$SERVER_DIR"
+    cd "$SERVER_DIR" || { echo "Failed to access server directory. Exiting."; exit 1; }
 
-    # Unzip and clean up
+    echo "Downloading Terraria server $TERRARIA_VERSION..."
+    wget "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${TERRARIA_VERSION}.zip" -O terraria-server.zip
+    if [ $? -ne 0 ]; then
+        echo "Error downloading Terraria server. Exiting."
+        exit 1
+    fi
+
     unzip terraria-server.zip
     rm terraria-server.zip
 
-    # Move to home directory
-    mv "1455" "$HOME/"
-    cd "$DIR" || exit
-
-    # Remove unnecessary files
+    cd "$INSTALL_DIR" || { echo "Failed to access Linux server directory. Exiting."; exit 1; }
     rm -f System* Mono* monoconfig mscorlib.dll
 
-    # Create tserver launcher script
-    SCRIPT_DIR="$HOME/terraria-server-script-for-termux"
-    mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/tserver" <<EOF
-#!/data/data/com.termux/files/usr/bin/bash
-mono --server --gc=sgen -O=all \$HOME/1455/Linux/TerrariaServer.exe
-EOF
-    chmod +x "$SCRIPT_DIR/tserver"
-
-    # Add to PATH in .bashrc if not already present
-    if ! grep -q "$SCRIPT_DIR" "$HOME/.bashrc"; then
-        echo 'export PATH="$PATH:$HOME/terraria-server-script-for-termux"' >> "$HOME/.bashrc"
+    # Create tserver launcher in PREFIX/bin (system-wide, like mcserver)
+    TSERVER_PATH="$PREFIX/bin/tserver"
+    if [ -f "$TSERVER_PATH" ]; then
+        echo "Warning: \"tserver\" command already exists. Overwriting..."
     fi
 
-    # Export path immediately for current session
-    export PATH="$PATH:$HOME/terraria-server-script-for-termux"
-    source "$HOME/.bashrc" 2>/dev/null
+    {
+        echo "#!/data/data/com.termux/files/usr/bin/bash"
+        echo "mono --server --gc=sgen -O=all \"$INSTALL_DIR/TerrariaServer.exe\""
+    } > "$TSERVER_PATH"
+    chmod +x "$TSERVER_PATH"
 
     clear
-    echo "✅  Terraria server installed successfully!"
-    echo "➡️  To start the server, type: tserver"
-    echo "➡️  If tserver command doesn't work go into ./1455/Linux folder and run tserver"
+    echo "✅  Terraria $TERRARIA_VERSION installed successfully to: $SERVER_DIR"
+    echo "➡️  You can now start the server by typing: tserver"
+    echo ""
+    echo "Starting Terraria server..."
+    tserver
 fi
