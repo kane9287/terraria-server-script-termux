@@ -6,3 +6,8 @@ For the first time use
 
 To run type 
 ``` tserver  ```
+
+TESTING ONLY:
+
+``` cd && git clone https://github.com/kane9287/terraria-server-script-termux.git && chmod +x terraria-server-script-termux/tserver-testing-updates && ./terraria-server-script-termux/tserver-testing-updates  ```
+
