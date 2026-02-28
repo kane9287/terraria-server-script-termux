@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Terraria server directory
-DIR="$HOME/1450/Linux"
+DIR="$HOME/1455/Linux"
 
 # Check if already installed
 if [ -d "$DIR" ]; then
@@ -17,14 +17,14 @@ else
     pkg install -y mono wget unzip
 
     # Download Terraria server zip
-    wget https://terraria.org/api/download/pc-dedicated-server/terraria-server-1450.zip -O terraria-server.zip
+    wget https://terraria.org/api/download/pc-dedicated-server/terraria-server-1455.zip -O terraria-server.zip
 
     # Unzip and clean up
     unzip terraria-server.zip
     rm terraria-server.zip
 
     # Move to home directory
-    mv "1450" "$HOME/"
+    mv "1455" "$HOME/"
     cd "$DIR" || exit
 
     # Remove unnecessary files
@@ -35,7 +35,7 @@ else
     mkdir -p "$SCRIPT_DIR"
     cat > "$SCRIPT_DIR/tserver" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
-mono --server --gc=sgen -O=all \$HOME/1450/Linux/TerrariaServer.exe
+mono --server --gc=sgen -O=all \$HOME/1455/Linux/TerrariaServer.exe
 EOF
     chmod +x "$SCRIPT_DIR/tserver"
 
@@ -51,5 +51,5 @@ EOF
     clear
     echo "✅  Terraria server installed successfully!"
     echo "➡️  To start the server, type: tserver"
-    echo "➡️  If tserver command doesn't work go into ./1450/Linux folder and run tserver"
+    echo "➡️  If tserver command doesn't work go into ./1455/Linux folder and run tserver"
 fi
