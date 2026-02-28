@@ -18,6 +18,8 @@ If you are updating the server to a new version you will need to delete the git 
 
 ``` cd && rm -rf terraria-server-script-termux && git clone https://github.com/kane9287/terraria-server-script-termux.git && chmod +x terraria-server-script-termux/tserver && ./terraria-server-script-termux/tserver ```
 
+This script has been tested and works on a lower powered Android device the Motorola Moto G Power XT2165DL. This has 4GB RAM and a quad core processor, with a single player it uses about 1% per 45-60m of play.
+
 ### Credits
 **The OG tserver script author:** https://github.com/gediminas748/terraria-server-script-for-termux  
 **Author of an MC server script for Termux. This script was instrumental in putting server files in an editable folder on Android sans root:** https://github.com/ramide1/mc-server-termux  
