@@ -1,0 +1,143 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# =====================
+# VERSION CONFIG
+# =====================
+TERRARIA_VERSION="1455"
+# =====================
+
+# Setup shared storage if needed
+if [ ! -d "$HOME/storage" ]; then
+    echo "Requesting storage permissions..."
+    termux-setup-storage
+    if [ $? -ne 0 ]; then
+        echo "Failed to set up storage. Exiting."
+        exit 1
+    fi
+    echo "Storage permissions granted."
+fi
+
+read -p "Enter the directory name for your Terraria server: " directory_name
+SERVER_DIR="$HOME/storage/shared/$directory_name"
+INSTALL_DIR="$SERVER_DIR/$TERRARIA_VERSION/Linux"
+
+# Look for any existing version install in the server directory
+EXISTING_VERSION=""
+EXISTING_DIR=""
+for d in "$SERVER_DIR"/*/Linux; do
+    if [ -f "$d/TerrariaServer.exe" ]; then
+        EXISTING_VERSION=$(basename "$(dirname "$d")")
+        EXISTING_DIR="$d"
+        break
+    fi
+done
+
+# Already on correct version — just launch
+if [ "$EXISTING_VERSION" = "$TERRARIA_VERSION" ]; then
+    clear
+    echo "Terraria $TERRARIA_VERSION already installed. Launching..."
+    mono --server --gc=sgen -O=all "$INSTALL_DIR/TerrariaServer.exe"
+    exit 0
+fi
+
+# Existing install found but different version — offer upgrade
+if [ -n "$EXISTING_VERSION" ]; then
+    clear
+    echo "Found existing Terraria $EXISTING_VERSION install."
+    echo "Target version is $TERRARIA_VERSION."
+    read -p "Upgrade from $EXISTING_VERSION to $TERRARIA_VERSION? World and config files will be preserved. [y/N]: " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Upgrade cancelled. Launching existing version instead..."
+        mono --server --gc=sgen -O=all "$EXISTING_DIR/TerrariaServer.exe"
+        exit 0
+    fi
+
+    pkg update -y && pkg upgrade -y
+    pkg install -y mono wget unzip
+
+    echo "Downloading Terraria $TERRARIA_VERSION..."
+    cd "$SERVER_DIR" || { echo "Failed to access server directory. Exiting."; exit 1; }
+    wget "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${TERRARIA_VERSION}.zip" -O terraria-server.zip
+    if [ $? -ne 0 ]; then
+        echo "Error downloading Terraria server. Exiting."
+        rm -f terraria-server.zip
+        exit 1
+    fi
+
+    unzip terraria-server.zip
+    rm terraria-server.zip
+
+    cd "$INSTALL_DIR" || { echo "Failed to access new version directory. Exiting."; exit 1; }
+    rm -f System* Mono* monoconfig mscorlib.dll
+
+    # Migrate world/player/config data from old version
+    echo "Migrating data from $EXISTING_VERSION..."
+    for item in Worlds Players serverconfig.txt; do
+        if [ -e "$EXISTING_DIR/$item" ]; then
+            cp -r "$EXISTING_DIR/$item" "$INSTALL_DIR/"
+            echo "  Copied $item"
+        fi
+    done
+
+    # Remove old version directory
+    echo "Removing old version $EXISTING_VERSION..."
+    rm -rf "$SERVER_DIR/$EXISTING_VERSION"
+
+    # Update launcher
+    TSERVER_PATH="$PREFIX/bin/tserver"
+    {
+        echo "#!/data/data/com.termux/files/usr/bin/bash"
+        echo "mono --server --gc=sgen -O=all \"$INSTALL_DIR/TerrariaServer.exe\""
+    } > "$TSERVER_PATH"
+    chmod +x "$TSERVER_PATH"
+
+    clear
+    echo "✅  Upgraded to Terraria $TERRARIA_VERSION successfully!"
+    echo "➡️  Worlds, Players, and serverconfig.txt have been migrated."
+    echo ""
+    echo "Starting Terraria server..."
+    mono --server --gc=sgen -O=all "$INSTALL_DIR/TerrariaServer.exe"
+    exit 0
+fi
+
+# No existing install — fresh install
+clear
+echo "Terraria server not found. Installing $TERRARIA_VERSION..."
+
+pkg update -y && pkg upgrade -y
+pkg install -y mono wget unzip
+
+mkdir -p "$SERVER_DIR"
+cd "$SERVER_DIR" || { echo "Failed to access server directory. Exiting."; exit 1; }
+
+echo "Downloading Terraria server $TERRARIA_VERSION..."
+wget "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${TERRARIA_VERSION}.zip" -O terraria-server.zip
+if [ $? -ne 0 ]; then
+    echo "Error downloading Terraria server. Exiting."
+    rm -f terraria-server.zip
+    exit 1
+fi
+
+unzip terraria-server.zip
+rm terraria-server.zip
+
+cd "$INSTALL_DIR" || { echo "Failed to access Linux server directory. Exiting."; exit 1; }
+rm -f System* Mono* monoconfig mscorlib.dll
+
+TSERVER_PATH="$PREFIX/bin/tserver"
+if [ -f "$TSERVER_PATH" ]; then
+    echo "Warning: \"tserver\" command already exists. Overwriting..."
+fi
+
+{
+    echo "#!/data/data/com.termux/files/usr/bin/bash"
+    echo "mono --server --gc=sgen -O=all \"$INSTALL_DIR/TerrariaServer.exe\""
+} > "$TSERVER_PATH"
+chmod +x "$TSERVER_PATH"
+
+clear
+echo "✅  Terraria $TERRARIA_VERSION installed successfully to: $SERVER_DIR"
+echo "➡️  You can now start the server by typing: tserver"
+echo ""
+echo "Starting Terraria server..."
+tserver
