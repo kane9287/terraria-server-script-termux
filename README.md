@@ -13,8 +13,4 @@ TESTING ONLY:
 
 If updating 
 
-``` cd && rm -rf terraria-server-script-termux \
-  && git clone https://github.com/kane9287/terraria-server-script-termux.git \
-  && chmod +x terraria-server-script-termux/tserver-testing-updates \
-  && ./terraria-server-script-termux/tserver-testing-updates
-  ```
+``` cd && rm -rf terraria-server-script-termux && git clone https://github.com/kane9287/terraria-server-script-termux.git && chmod +x terraria-server-script-termux/tserver-testing-updates && ./terraria-server-script-termux/tserver-testing-updates ```
