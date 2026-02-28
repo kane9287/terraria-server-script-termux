@@ -3,7 +3,7 @@
 # =====================
 # VERSION CONFIG
 # =====================
-TERRARIA_VERSION="1455"
+TERRARIA_VERSION="1454"
 # =====================
 
 # Setup shared storage if needed
